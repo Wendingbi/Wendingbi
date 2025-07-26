@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Salon Appointment Booking</title>
+<style>
+  /* Basic reset */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  header {
+    background-color: #ffebee;
+    color: #c62828;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="date"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  #slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .slot {
+    flex: 0 0 calc(50% - 0.5rem);
+    padding: 0.75rem;
+    text-align: center;
+    background-color: #e0f7fa;
+    border: 1px solid #00acc1;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .slot:hover {
+    background-color: #b2ebf2;
+  }
+
+  .slot.selected {
+    background-color: #00acc1;
+    color: #fff;
+  }
+
+  button#bookButton {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #c62828;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button#bookButton:disabled {
+    background-color: #ef9a9a;
+    cursor: not-allowed;
+  }
+
+  button#bookButton:not(:disabled):hover {
+    background-color: #b71c1c;
+  }
+
+  #confirmation {
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: #2e7d32;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  @media (min-width: 600px) {
+    .container {
+      padding: 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Book Your Haircut Appointment</h1>
+  <p>Select a date and time for your visit.</p>
+</header>
+<div class="container">
+  <label for="date">Choose Date:</label>
+  <input type="date" id="date" min="2025-07-27" />
+
+  <div id="slots"></div>
+
+  <button id="bookButton" disabled>Confirm Booking</button>
+  <p id="confirmation"></p>
+</div>
+
+<script>
+  // Example data: available time slots by date
+  // In a real application, this data could come from an API or server
+  const availableSlots = {
+    "2025-07-27": ["09:00", "10:00", "11:00", "13:00", "14:00", "16:00"],
+    "2025-07-28": ["09:30", "10:30", "12:00", "14:30", "15:30"],
+    "2025-07-29": ["08:00", "09:15", "11:45", "13:45", "15:15"],
+    "2025-07-30": ["09:00", "10:30", "13:30", "15:00"],
+    "2025-07-31": ["10:00", "12:00", "14:00", "16:00"]
+  };
+
+  const dateInput = document.getElementById('date');
+  const slotsDiv = document.getElementById('slots');
+  const bookButton = document.getElementById('bookButton');
+  const confirmation = document.getElementById('confirmation');
+
+  let selectedDate = null;
+  let selectedTime = null;
+
+  dateInput.addEventListener('change', function() {
+    selectedDate = this.value;
+    selectedTime = null;
+    renderSlots();
+  });
+
+  bookButton.addEventListener('click', function() {
+    if (selectedDate && selectedTime) {
+      confirmation.textContent = `Your appointment is booked for ${selectedDate} at ${selectedTime}. Thank you!`;
+      // Disable the selected slot to simulate a booking
+      const index = availableSlots[selectedDate].indexOf(selectedTime);
+      if (index !== -1) {
+        availableSlots[selectedDate].splice(index, 1);
+      }
+      selectedTime = null;
+      renderSlots();
+      this.disabled = true;
+    }
+  });
+
+  function renderSlots() {
+    slotsDiv.innerHTML = '';
+    confirmation.textContent = '';
+    bookButton.disabled = true;
+    if (!selectedDate || !availableSlots[selectedDate] || availableSlots[selectedDate].length === 0) {
+      const msg = document.createElement('p');
+      msg.textContent = 'No available time slots for the selected date.';
+      msg.style.color = '#c62828';
+      msg.style.fontWeight = 'bold';
+      slotsDiv.appendChild(msg);
+      return;
+    }
+
+    availableSlots[selectedDate].forEach(time => {
+      const slotElement = document.createElement('div');
+      slotElement.className = 'slot';
+      slotElement.textContent = time;
+
+      // Highlight selected slot
+      if (time === selectedTime) {
+        slotElement.classList.add('selected');
+      }
+
+      slotElement.addEventListener('click', function() {
+        selectedTime = time;
+        document.querySelectorAll('.slot').forEach(slot => slot.classList.remove('selected'));
+        slotElement.classList.add('selected');
+        bookButton.disabled = false;
+      });
+
+      slotsDiv.appendChild(slotElement);
+    });
+  }
+
+  // Set default date to today's date if available
+  const today = new Date().toISOString().split('T')[0];
+  if (availableSlots[today]) {
+    dateInput.value = today;
+    selectedDate = today;
+    renderSlots();
+  }
+</script>
+</body>
+</html>
+
